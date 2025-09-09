@@ -9,7 +9,7 @@ I'm documenting my journey learning cybersecurity through various platforms.
 ### OverTheWire Bandit
 - [Level 0](bandit/level-0.md) - SSH basics
 - [Level 5](bandit/level-5.md) - Finding files with specific properties
-- [Level 6](bandit/level-6.md) - Finding files somewhere in the server with specific properties
+- [Level 6](bandit/level-6.md) - System wide file search with specific properties
 
 - ## Progress
 - Bandit: 6/34 levels completed
