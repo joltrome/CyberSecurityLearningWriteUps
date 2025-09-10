@@ -8,10 +8,10 @@ I'm documenting my journey learning cybersecurity through various platforms.
 
 ### OverTheWire Bandit
 - [Level 0](bandit/level-0.md) - SSH basics
-- [Level 5](bandit/level-5.md) - Finding files with specific properties
-- [Level 6](bandit/level-6.md) - System wide file search with specific properties
-- [Level 9](bandit/level-9.md) - Extract human readable content at specific locations
-
+- [Level 5](bandit/level-05.md) - Finding files with specific properties
+- [Level 6](bandit/level-06.md) - System wide file search with specific properties
+- [Level 9](bandit/level-09.md) - Extract human readable content at specific locations
+- [Level 11](bandit/level-11.md) - Learned ROT13 Encryption
 
 - ## Progress
 - Bandit: 10/34 levels completed
