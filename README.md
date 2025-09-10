@@ -1,5 +1,5 @@
 # CyberSecurityLearningWriteUps
-My cybersecurity writeups documenting my learning progress
+My cybersecurity writeups documenting my day-to-day learning progress!
 
 ## About
 I'm documenting my journey learning cybersecurity through various platforms.
