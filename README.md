@@ -12,6 +12,7 @@ I'm documenting my journey learning cybersecurity through various platforms.
 - [Level 6](bandit/level-06.md) - System wide file search with specific properties
 - [Level 9](bandit/level-09.md) - Extract human readable content at specific locations
 - [Level 11](bandit/level-11.md) - Learned ROT13 Encryption
+- [Level 12](bandit/level-12.md) - Decryption of hexdump with various commands such as gz, bz2, and tar 
 
 - ## Progress
 - Bandit: 10/34 levels completed
