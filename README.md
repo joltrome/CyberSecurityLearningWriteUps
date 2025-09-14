@@ -14,7 +14,7 @@ I'm documenting my journey learning cybersecurity through various platforms.
 - [Level 11](bandit/level-11.md) - Learned ROT13 Encryption
 - [Level 12](bandit/level-12.md) - Decryption of hexdump with various commands such as gz, bz2, and tar 
 - [Level 13 & 14](bandit/level-13&14.md) - SSH Authentication
-- [Level 16](bandit/level-16.md) - Port Scanning
+- [Level 16](bandit/level-16.md) - SSL Port Scanning and SSH Key Authentication
 
   
 - ## Progress
