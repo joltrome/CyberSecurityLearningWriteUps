@@ -15,7 +15,7 @@ I'm documenting my journey learning cybersecurity through various platforms.
 - [Level 12](bandit/level-12.md) - Decryption of hexdump with various commands such as gz, bz2, and tar 
 - [Level 13 & 14](bandit/level-13&14.md) - SSH Authentication
 - [Level 16](bandit/level-16.md) - SSL Port Scanning and SSH Key Authentication
-
+- [Level 18](bandit/level-18.md) - Bypassing malicious ssh
   
 - ## Progress
 - Bandit: 10/34 levels completed
