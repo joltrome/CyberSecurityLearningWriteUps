@@ -18,6 +18,6 @@ I'm documenting my journey learning cybersecurity through various platforms.
 - [Level 18](bandit/level-18.md) - Bypassing malicious .bashrc
   
 - ## Progress
-- Bandit: 10/34 levels completed
+- Bandit: 18/34 levels completed
 - TryHackMe: Intro to Cybersecurity [In Progress]
   
