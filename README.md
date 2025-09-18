@@ -13,10 +13,11 @@ I'm documenting my journey learning cybersecurity through various platforms.
 - [Level 9](bandit/level-09.md) - Extract human readable content at specific locations
 - [Level 11](bandit/level-11.md) - Learned ROT13 Encryption
 - [Level 12](bandit/level-12.md) - Decryption of hexdump with various commands such as gz, bz2, and tar 
-- [Level 13 & 14](bandit/level-13&14.md) - SSH Authentication
+- [Level 13&14](bandit/level-13&14.md) - SSH Authentication
 - [Level 16](bandit/level-16.md) - SSL Port Scanning and SSH Key Authentication
 - [Level 18](bandit/level-18.md) - Bypassing malicious .bashrc
-  
+- [Level 19&20](bandit/level-19&20.md) - setuid Privilige escalation
+
 - ## Progress
 - Bandit: 18/34 levels completed
 - TryHackMe: Intro to Cybersecurity [In Progress]
