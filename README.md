@@ -17,8 +17,13 @@ I'm documenting my journey learning cybersecurity through various platforms.
 - [Level 16](bandit/level-16.md) - SSL Port Scanning and SSH Key Authentication
 - [Level 18](bandit/level-18.md) - Bypassing malicious .bashrc
 - [Level 19&20](bandit/level-19&20.md) - setuid Privilige escalation
+- [Level 22](bandit/level-22.md) - Dynamic Filename Generation with MD5 Hashing
+- [Level 23](bandit/level-23.md) - Script Execution and Privilege Escalation
+- [Level 24](bandit/level-24.md) - Brute Force Attack
+- [Level 25&26](bandit/level-25&26.md) - Shell Escape and Vi Editor Exploitation
+
 
 - ## Progress
-- Bandit: 18/34 levels completed
+- Bandit: 32/33 levels completed
 - TryHackMe: Intro to Cybersecurity [In Progress]
   
