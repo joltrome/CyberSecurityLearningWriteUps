@@ -437,4 +437,4 @@ stty rows 5 cols 20
 - **Help systems**: Many programs' help functions can be exploited
 - **Terminal emulators**: Even basic terminal features can sometimes be exploited
 
-This was the hardesr level so far and it demonstrates sophisticated shell escape techniques and highlights the importance of understanding the security implications of interactive programs in restricted environments.
+This was the hardest level so far as it demonstrates sophisticated shell escape techniques and highlights the importance of understanding the security implications of interactive programs in restricted environments.
