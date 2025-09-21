@@ -21,9 +21,9 @@ I'm documenting my journey learning cybersecurity through various platforms.
 - [Level 23](bandit/level-23.md) - Script Execution and Privilege Escalation
 - [Level 24](bandit/level-24.md) - Brute Force Attack
 - [Level 25&26](bandit/level-25&26.md) - Shell Escape and Vi Editor Exploitation
-
+- [Level 32](bandit/level-25&26.md) - Uppercase Shell Escape and Vi Editor Exploitation
 
 - ## Progress
-- Bandit: 32/33 levels completed
+- Bandit: 32/32 levels completed
 - TryHackMe: Intro to Cybersecurity [In Progress]
   
