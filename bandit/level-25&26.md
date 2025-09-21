@@ -121,10 +121,18 @@ v
 - Vi was now running with bandit26 privileges
 - Most importantly: Vi has much more powerful escape capabilities than `more`
 
+#### Step 8: Shell Escape via Vi
+**Inside vi editor:**
+I used vi's shell escape feature by typing:
+```
+:shell
+```
 
-- I could now run normal shell commands
-- I had successfully bypassed the restrictive custom shell
-- The escape chain was complete: SSH → `more` → vi → bash shell
+**What `:shell` does in vi:**
+- `:shell` is a vi command that spawns a new shell session
+- The shell runs with the same user privileges as the vi process
+- Since vi was running as bandit26, the shell also runs as bandit26
+- This gives me a real, interactive bash shell instead of the fake `/usr/bin/showtext` shell
 
 #### Step 9: Retrieving the Password
 With shell access as bandit26, I could read the password:
