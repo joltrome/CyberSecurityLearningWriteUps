@@ -64,11 +64,12 @@ ip addr show eth0
 
 ### Script Analysis
 
-#### Code Structure
+#### Final Code Structure
 ```python
 #!/usr/bin/env python
 import subprocess
 import optparse
+import re
 
 def get_arguments():
     parser = optparse.OptionParser()
@@ -86,10 +87,24 @@ def change_mac(interface,new_mac_address):
     subprocess.call(["ifconfig", interface, "down"])
     subprocess.call(["ifconfig", interface, "hw", "ether", new_mac_address])
     subprocess.call(["ifconfig", interface, "up"])
-    subprocess.call(["ifconfig"])
+
+def get_current_mac(interface):
+    ifconfig_interface = subprocess.check_output(["ifconfig", interface])
+    mac_address_search_result = re.search(r"\w\w:\w\w:\w\w:\w\w:\w\w:\w\w", ifconfig_interface)
+    if mac_address_search_result:
+        return mac_address_search_result.group(0)
+    else:
+        print("[-] No MAC Address Found")
 
 options = get_arguments()
+current_mac = get_current_mac(options.interface)
+print("Current MAC Address: " + str(current_mac))
 change_mac(options.interface,options.address)
+current_mac = get_current_mac(options.interface)
+if current_mac == options.address:
+    print("[+] MAC Address Changed Successfully to " + options.address)
+else:
+    print("[-] MAC Address did not get changed")
 ```
 
 #### Key Components
@@ -116,17 +131,46 @@ elif not options.address:
 - Displays error messages with usage guidance
 - Prevents execution with incomplete parameters
 
-**3. MAC Change Function**
+**3. MAC Address Retrieval Function**
+```python
+def get_current_mac(interface):
+    ifconfig_interface = subprocess.check_output(["ifconfig", interface])
+    mac_address_search_result = re.search(r"\w\w:\w\w:\w\w:\w\w:\w\w:\w\w", ifconfig_interface)
+    if mac_address_search_result:
+        return mac_address_search_result.group(0)
+    else:
+        print("[-] No MAC Address Found")
+```
+- Uses `subprocess.check_output()` to capture ifconfig output
+- Implements regex pattern matching to extract MAC address
+- Returns the MAC address if found, otherwise displays error message
+
+**4. MAC Change Function**
 ```python
 def change_mac(interface,new_mac_address):
     subprocess.call(["ifconfig", interface, "down"])
     subprocess.call(["ifconfig", interface, "hw", "ether", new_mac_address])
     subprocess.call(["ifconfig", interface, "up"])
-    subprocess.call(["ifconfig"])
 ```
-- Encapsulates the MAC changing process
+- Encapsulates the three-step MAC changing process
 - Uses `subprocess.call()` with list format for secure command execution
-- Displays final configuration for verification
+- Follows the standard sequence: down → change → up
+
+**5. Verification Logic**
+```python
+current_mac = get_current_mac(options.interface)
+print("Current MAC Address: " + str(current_mac))
+change_mac(options.interface,options.address)
+current_mac = get_current_mac(options.interface)
+if current_mac == options.address:
+    print("[+] MAC Address Changed Successfully to " + options.address)
+else:
+    print("[-] MAC Address did not get changed")
+```
+- Displays original MAC address before making changes
+- Executes the MAC change operation
+- Retrieves the new MAC address after the change
+- Compares the result with the intended address to verify success
 
 ### Usage Examples
 
@@ -143,14 +187,19 @@ python3 MacChanger1.py --help
 ```
 
 #### Sample Output
+```bash
+$ python3 MacChanger1.py -i eth0 -a 00:11:22:33:44:55
+Current MAC Address: 08:00:27:53:4c:a9
+[+] Changing MAC Address for eth0 to 00:11:22:33:44:55
+[+] MAC Address Changed Successfully to 00:11:22:33:44:55
 ```
-[+] Changing MAC Address for eth0 to 11:22:33:44:55:66
-eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
-        inet 192.168.1.100  netmask 255.255.255.0  broadcast 192.168.1.255
-        inet6 fe80::1322:33ff:fe44:5566  prefixlen 64  scopeid 0x20<link>
-        ether 11:22:33:44:55:66  txqueuelen 1000  (Ethernet)
-        RX packets 1234  bytes 567890 (554.5 KiB)
-        TX packets 987  bytes 654321 (638.9 KiB)
+
+#### Error Handling Example
+```bash
+$ python3 MacChanger1.py -i eth0 -a invalid-mac
+Current MAC Address: 08:00:27:53:4c:a9
+[+] Changing MAC Address for eth0 to invalid-mac
+[-] MAC Address did not get changed
 ```
 
 ## Security and Practical Applications
@@ -196,11 +245,38 @@ eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
 
 ## Script Improvements and Enhancements
 
-### Current Limitations
-1. **No error handling** - Script doesn't check if commands succeed
-2. **No MAC validation** - Doesn't verify MAC address format
-3. **No original MAC backup** - Can't restore original address
-4. **No interface validation** - Doesn't check if interface exists
+### Script Improvements and Enhanced Features
+
+The final version incorporates several important enhancements over the basic implementation:
+
+#### 1. MAC Address Verification System
+The script now includes a verification mechanism that:
+- **Captures the original MAC** before making changes
+- **Confirms the change** by reading the MAC address after modification
+- **Provides clear feedback** on whether the operation succeeded or failed
+
+#### 2. Regex Pattern Matching
+Uses regular expressions to extract MAC addresses from ifconfig output:
+```python
+mac_address_search_result = re.search(r"\w\w:\w\w:\w\w:\w\w:\w\w:\w\w", ifconfig_interface)
+```
+**Pattern breakdown:**
+- `\w\w` matches two word characters (letters, digits, underscore)
+- `:` matches literal colon characters
+- Pattern repeats six times to match full MAC address format
+
+#### 3. Error Detection
+The script provides feedback for common failure scenarios:
+- Invalid MAC address formats
+- Network interface errors
+- Permission issues
+- System command failures
+
+#### 4. User Experience Improvements
+- **Clear status messages** throughout the process
+- **Before/after comparison** showing original and new MAC addresses  
+- **Success/failure confirmation** with descriptive messages
+- **Consistent output formatting** with [+] for success and [-] for errors
 
 ### Suggested Enhancements
 ```python
